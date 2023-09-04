@@ -1,47 +1,65 @@
 import { galleryItems } from "./gallery-items.js";
-// Change code below this line
 
-const galleryEl = document.querySelector(".gallery");
+const galleryContainer = document.querySelector(".gallery");
 
-function createGallery() {
-  let imgCard = galleryItems
-    .map(({ preview, original, description }) => {
-      return `<div class="gallery__item">
-  <a class="gallery__link" href=${original}>
-    <img
-      class="gallery__image"
-      src=${preview}
-      data-source=${original}
-      alt=${description}
-    />
-  </a>
-</div>`;
-    })
+// Создание разметки
+function creatGalleryEl(arr) {
+  return arr
+    .map(
+      ({ preview, original, description }) =>
+        `
+        <li class="gallery__item">
+        <a class="gallery__link" href="${original}">
+          <img
+            class="gallery__image"
+            src="${preview}"
+            data-source="${original}"
+            alt="I${description}"
+          />
+        </a>
+      </li>
+        `
+    )
     .join("");
-  galleryEl.innerHTML = imgCard;
 }
-createGallery();
 
-galleryEl.addEventListener("click", onImgClick);
-function onImgClick(event) {
-  event.preventDefault();
+// Добавление в ДОМ
+galleryContainer.insertAdjacentHTML("beforeend", creatGalleryEl(galleryItems));
 
-  const srcOriginalImages = event.target.dataset.source;
+// Делегирование получение ссылки на большое изображение
+galleryContainer.addEventListener("click", onGalleryContainerClick);
 
-  const instance = basicLightbox.create(`
-    <img src=${srcOriginalImages} width="800" height="600">
-    `);
+function onGalleryContainerClick(evt) {
+  // Запрет на переход по ссылке
+  evt.preventDefault();
+
+  // Забираю значение data-sourse
+  const oringinalImgSrc = evt.target.dataset.source;
+
+  // Создаю модалку с новым размером изображения
+  const instance = basicLightbox.create(
+    `
+      <div class="modal">
+      <img src="${oringinalImgSrc}" width="1200">
+      </div>
+  `,
+    {
+      onShow: () => {
+        document.addEventListener("keydown", onEscapePress);
+      },
+    },
+    {
+      onClose: () => {
+        document.removeEventListener("keydown", onEscapePress);
+      },
+    }
+  );
 
   instance.show();
 
-  document.addEventListener("keydown", closeModalEsc);
-
-  function closeModalEsc(e) {
-    if (e.code !== "Escape") return;
-    else {
+  function onEscapePress(evt) {
+    if (evt.code === "Escape") {
       instance.close();
-
-      document.removeEventListener("keydown", closeModalEsc);
     }
   }
 }
